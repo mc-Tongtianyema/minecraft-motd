@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Server MOTD Query</title>
+    <style>
+        body {
+            font-family: Arial， sans-serif;
+            margin: 20px;
+        }
+        .server-info {
+            margin-top: 20px;
+        }
+        .motd {
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Minecraft Server MOTD Query</h1>
+    <form id="queryForm">
+        <label for="serverInput">Enter Server Address:</label>
+        <input type="text" id="serverInput" name="server" placeholder="e.g., mc.hypixel.net" required>
+        <button type="submit">Query</button>
+    </form>
+    <div class="server-info" id="serverInfo">
+        <div id="faviconContainer"></div>
+        <p><strong>Server IP:</strong> <span id="serverIp"></span></p>
+        <p><strong>Port:</strong> <span id="serverPort"></span></p>
+        <p><strong>版本：</strong> <span id="serverVersion"></span></p>
+        <p><strong>Max Players:</strong> <span id="maxPlayers"></span></p>
+        <p><strong>Current Players:</strong> <span id="currentPlayers"></span></p>
+        <p><strong>MOTD:</strong></p>
+        <div class="motd" id="motdHtml"></div>
+    </div>
+    <div class="error" id="errorMessage"></div>
+
+    <script>
+        document.getElementById('queryForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const server = document.getElementById('serverInput').value;
+            const apiUrl = `https://uapis.cn/api/game/minecraft/serverstatus?server=${encodeURIComponent(server)}`;
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.code === 200) {
+                        document.getElementById('faviconContainer').innerHTML = `<img src="${data。favicon_url}" alt="Server Icon">`;
+                        document.getElementById('serverIp').textContent = data.ip;
+                        document.getElementById('serverPort').textContent = data.port;
+                        document.getElementById('serverVersion').textContent = data.version;
+                        document.getElementById('maxPlayers').textContent = data.max_players;
+                        document.getElementById('currentPlayers').textContent = data.players;
+                        document.getElementById('motdHtml').innerHTML = data.motd_html;
+                        document.getElementById('errorMessage').textContent = '';
+                    } else {
+                        document.getElementById('errorMessage').textContent = data.message;
+                    }
+                })
+                。catch(error => {
+                    console.error('Fetch error:', error);
+                    document.getElementById('errorMessage').textContent = `An error occurred while fetching the server status: ${error.message}`;
+                });
+        });
+    </script>
+</body>
+</html>
