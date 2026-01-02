@@ -3,43 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft服务器2b2t.org状态查询</title>
+    <title>Minecraft服务器MOTD查询</title>
     <style>
         body {
-            font-family: Arial， sans-serif;
-            margin: 20px;
-        }
-        。api-response {
-            margin-top: 20px;
-            white-space: pre-wrap;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
             background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
             padding: 10px;
             border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        .server-info {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+        .server-details {
+            margin-left: 20px;
+        }
+        .motd {
+            white-space: pre-wrap;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Minecraft服务器2b2t.org状态查询</h1>
-    <div class="api-response" id="apiResponse"></div>
+    <h1>Minecraft服务器MOTD查询</h1>
+    <form id="queryForm">
+        <label for="serverInput">输入服务器地址：</label>
+        <input type="text" id="serverInput" name="server" placeholder="例如：azsu.top" required>
+        <button type="submit">查询</button>
+    </form>
+    <div class="server-info" id="serverInfo">
+        <div id="faviconContainer"></div>
+        <div class="server-details">
+            <p><strong>服务器IP：</strong> <span id="serverIp"></span></p>
+            <p><strong>版本：</strong> <span id="serverVersion"></span></p>
+            <p><strong>最大玩家数：</strong> <span id="maxPlayers"></span></p>
+            <p><strong>当前玩家数：</strong> <span id="currentPlayers"></span></p>
+            <p><strong>MOTD：</strong></p>
+            <div class="motd" id="motdHtml"></div>
+        </div>
+    </div>
+    <div class="error" id="errorMessage"></div>
 
     <script>
-        const apiUrl = `https://api.azsu.top/mcping/json?ip=2b2t.org`;
+        document.getElementById('queryForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const server = document.getElementById('serverInput').value;
+            const apiUrl = `https://api.azsu.top/mcping/json?ip=  ${encodeURIComponent(server)}`;
 
-        fetch(apiUrl)
-            .键，然后(response => {
-                if (!response.ok) {
-                    throw new 错误(`HTTP错误! 状态码: ${response。status}`);
-                }
-                return response。json();
-            })
-            。键，然后(data => {
-                // 显示API返回的原始数据
-                document.getElementById('apiResponse').textContent = JSON.stringify(data, null, 2);
-            })
-            .catch(error => {
-                console.error('请求错误:', error);
-                document.getElementById('apiResponse').textContent = `查询服务器状态时发生错误: ${error.message}`;
-            });
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误! 状态码: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.code === 10000) {
+                        document.getElementById('faviconContainer').innerHTML = `<img src="${data.data.favicon}" alt="服务器图标" style="width: 64px; height: 64px;">`;
+                        document.getElementById('serverIp').textContent = data.data.host;
+                        document.getElementById('serverVersion').textContent = data.data.version;
+                        document.getElementById('maxPlayers').textContent = data.data.players.max;
+                        document.getElementById('currentPlayers').textContent = data.data.players.online;
+                        document.getElementById('motdHtml').innerHTML = data.data.motd_html;
+                        document.getElementById('errorMessage').textContent = '';
+                    } else {
+                        document.getElementById('errorMessage').textContent = data.message;
+                    }
+                })
+                .catch(error => {
+                    console.error('请求错误:', error);
+                    document.getElementById('errorMessage').textContent = `查询服务器状态时发生错误: ${error.message}`;
+                });
+        });
     </script>
 </body>
 </html>
